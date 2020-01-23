@@ -5,10 +5,12 @@
   *@date 02/16/2019
   */
 
+ #include "Platforms/Common/mrt_platform.h"
+
 #ifdef __cplusplus
 namespace Devices
 {
-#ednif
+#endif
 
 #define REG_PERM_R    0x01
 #define REG_PERM_W    0x02
@@ -17,23 +19,23 @@ namespace Devices
 typedef struct{
   uint32_t mAddr;
   int mSize;
-  uint8_t mPerm;
+  uint8_t mFlags;
   bool mTouch;
 } mrt_reg_t;
 
-typedef enum{
-  MRT_BUS_I2C,    //i2c type
-  MRT_BUS_SPI,    //SPI bus
-} mrt_bus_type_e;
-
-#define REG_DEF(name,addr,type,description) \
-  mrt_reg_t name = {       \
+#define REG_DEF(name,addr,type, flags,description) \
+  mrt_reg_t name##_data = {     \
     .mAddr = addr,              \
     .mSize = sizeof(type),      \
-    .mFlags = REG_PERM_ALL       \
-  };
+    .mFlags = flags      \
+  };                            \
+  mrt_reg_t* name = &name##_data;
 
-typedef struct mrt_regdev{
+//typedef mrt_status_t (*RegOperation)(mrt_regdev* dev, uint32_t addr, uint8_t* data,int len); 
+
+typedef struct mrt_regdev_t mrt_regdev_t;
+
+struct mrt_regdev_t{
   mrt_bus_type_e mBusType;        //type of device
   mrt_i2c_handle_t  mI2cHandle;   //i2c periph handle
   uint8_t mAddr;                  //i2c address
@@ -42,9 +44,9 @@ typedef struct mrt_regdev{
   uint8_t mMemAddrSize;           //size of register address
   int mWriteDelayMS;              //delay after write command
   int mTimeout;
-  mrt_status_t (*pfWrite)(mrt_regdev* dev, uint32_t addr, uint8_t* data,int len); //pointer to write function
-  mrt_status_t (*pfRead)(mrt_regdev* dev, uint32_t addr, uint8_t* data,int len);  //pointer to read function
-} mrt_regdev_t;
+  mrt_status_t (*fWrite)(mrt_regdev_t* dev, uint32_t addr, uint8_t* data,int len); //pointer to write function
+  mrt_status_t (*fRead)(mrt_regdev_t* dev, uint32_t addr, uint8_t* data,int len);  //pointer to read function
+};
 
 
 #ifdef __cplusplus
@@ -54,23 +56,25 @@ extern "C"
 
 /**
   *@brief creates new generic i2c register device
+  *@param dev ptr to regdev
   *@param handle - i2c periph handle (type defined by platform)
   *@param addr - 8 bit i2c address
   *@param memAddrSize size of register address in bytes
   *@pre Periph should already be configured and initialized
-  *@return ptr to new generic register device
+  *@return status
   */
-mrt_regdev_t* new_i2c_register_device( mrt_i2c_handle_t handle, uint8_t addr, uint8_t memAddrSize );
+mrt_status_t init_i2c_register_device(mrt_regdev_t* dev, mrt_i2c_handle_t handle, uint8_t addr, uint8_t memAddrSize );
 
 /**
   *@brief creates new generic spi register device
+  *@param dev ptr to regdev
   *@param handle - spi periph handle (type defined by platform)
   *@param chipSelect - gpio for chip select (type define by platform)
   *@param memAddrSize size of register address in bytes
   *@pre Periph should already be configured and initialized
-  *@return ptr to new generic register device
+  *@return status
   */
-mrt_regdev_t* new_spi_register_device( mrt_spi_handle_t handle, mrt_gpio_t chipSelect, uint8_t memAddrSize );
+mrt_status_t init_spi_register_device(mrt_regdev_t* dev, mrt_spi_handle_t handle, mrt_gpio_t chipSelect, uint8_t memAddrSize );
 
 /**
   *@brief writes register of device
