@@ -16,8 +16,8 @@ mrt_status_t init_i2c_register_device(mrt_regdev_t* dev, mrt_i2c_handle_t handle
   dev->mAddr = addr;
   dev->mMemAddrSize = memAddrSize;
   dev->mWriteDelayMS = 1;
-  dev->fWrite = &regdev_write_i2c;   //set write register function to default for i2c
-  dev->fRead = &regdev_read_i2c;     //set read register function to default for i2c
+  dev->fWrite = regdev_write_i2c;   //set write register function to default for i2c
+  dev->fRead = regdev_read_i2c;     //set read register function to default for i2c
 
   return MRT_STATUS_OK;
 }
@@ -30,8 +30,8 @@ mrt_status_t init_spi_register_device(mrt_regdev_t* dev, mrt_spi_handle_t handle
   dev->mChipSelect= chipSelect;
   dev->mMemAddrSize = memAddrSize;
   dev->mWriteDelayMS = 1;
-  dev->fWrite= &regdev_write_spi;   //set write register function to default for spi
-  dev->fRead = &regdev_read_spi;     //set read register function to default for spi
+  dev->fWrite= regdev_write_spi;   //set write register function to default for spi
+  dev->fRead = regdev_read_spi;     //set read register function to default for spi
 
   return MRT_STATUS_OK;
 }
@@ -39,7 +39,10 @@ mrt_status_t init_spi_register_device(mrt_regdev_t* dev, mrt_spi_handle_t handle
 
 mrt_status_t regdev_write_reg(mrt_regdev_t* dev, mrt_reg_t* reg, uint8_t* data)
 {
-  return dev->fWrite(dev, reg->mAddr, data, reg->mSize);
+  mrt_status_t ret;
+  ret = dev->fWrite(dev, reg->mAddr, data, reg->mSize);
+  MRT_DELAY_MS(dev->mWriteDelayMS);
+  return ret;
 }
 
 

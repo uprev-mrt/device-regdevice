@@ -15,6 +15,7 @@ namespace Devices
 #define REG_PERM_R    0x01
 #define REG_PERM_W    0x02
 #define REG_PERM_RW   0x03
+#define REG_FLAG_SWAP 0x80 //Flag to swap endianess
 
 typedef struct{
   uint32_t mAddr;
@@ -31,9 +32,9 @@ typedef struct{
   };                            \
   mrt_reg_t* name = &name##_data;
 
-//typedef mrt_status_t (*RegOperation)(mrt_regdev* dev, uint32_t addr, uint8_t* data,int len); 
 
 typedef struct mrt_regdev_t mrt_regdev_t;
+typedef mrt_status_t (*RegOperation)(mrt_regdev_t* dev, uint32_t addr, uint8_t* data,int len); 
 
 struct mrt_regdev_t{
   mrt_bus_type_e mBusType;        //type of device
@@ -44,8 +45,9 @@ struct mrt_regdev_t{
   uint8_t mMemAddrSize;           //size of register address
   int mWriteDelayMS;              //delay after write command
   int mTimeout;
-  mrt_status_t (*fWrite)(mrt_regdev_t* dev, uint32_t addr, uint8_t* data,int len); //pointer to write function
-  mrt_status_t (*fRead)(mrt_regdev_t* dev, uint32_t addr, uint8_t* data,int len);  //pointer to read function
+  mrt_endianess_e mEndianess;
+  RegOperation fWrite; //pointer to write function
+  RegOperation fRead;  //pointer to read function
 };
 
 
