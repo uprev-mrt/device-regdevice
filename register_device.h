@@ -8,7 +8,7 @@
  #include "Platforms/Common/mrt_platform.h"
 
 #ifdef __cplusplus
-namespace Devices
+extern "C"
 {
 #endif
 
@@ -51,10 +51,6 @@ struct mrt_regdev_t{
 };
 
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 /**
   *@brief creates new generic i2c register device
@@ -126,6 +122,5 @@ mrt_status_t regdev_read_spi(mrt_regdev_t* dev, uint32_t addr, uint8_t* data, in
 
 
 #ifdef __cplusplus
-}
 }
 #endif

@@ -1,0 +1,5 @@
+---
+name: RegDevice
+description: Base class for register based devices
+category: Device
+requires: [Platform]
