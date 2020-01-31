@@ -7,6 +7,23 @@
 
 #include "register_device.h"
 
+/**
+ * @brief Get the offset of a mask
+ * @param mask 
+ * @return int 
+ */
+static int getMaskOffset(uint32_t mask)
+{
+  int count =0;
+  while((mask & 1) == 0)
+  {
+    mask = mask >> 1;
+    count++;
+  }
+
+  return count;
+}
+
 
 mrt_status_t init_i2c_register_device(mrt_regdev_t* dev, mrt_i2c_handle_t handle, uint8_t addr, uint8_t memAddrSize )
 {
@@ -18,6 +35,8 @@ mrt_status_t init_i2c_register_device(mrt_regdev_t* dev, mrt_i2c_handle_t handle
   dev->mWriteDelayMS = 1;
   dev->fWrite = regdev_write_i2c;   //set write register function to default for i2c
   dev->fRead = regdev_read_i2c;     //set read register function to default for i2c
+  dev->mAutoIncrement = false;
+  dev->mAiMask =0;
 
   return MRT_STATUS_OK;
 }
@@ -32,23 +51,102 @@ mrt_status_t init_spi_register_device(mrt_regdev_t* dev, mrt_spi_handle_t handle
   dev->mWriteDelayMS = 1;
   dev->fWrite= regdev_write_spi;   //set write register function to default for spi
   dev->fRead = regdev_read_spi;     //set read register function to default for spi
+  dev->mAutoIncrement = false;
+  dev->mAiMask =0;
 
   return MRT_STATUS_OK;
 }
 
 
-mrt_status_t regdev_write_reg(mrt_regdev_t* dev, mrt_reg_t* reg, uint8_t* data)
+mrt_status_t regdev_write_reg(mrt_regdev_t* dev, mrt_reg_t* reg, uint32_t data)
 {
   mrt_status_t ret;
-  ret = dev->fWrite(dev, reg->mAddr, data, reg->mSize);
+#ifndef MRT_REGDEV_DISABLE_CACHE
+  reg->mCache = data;
+#endif
+  if(dev->mAutoIncrement)
+    ret = dev->fWrite(dev, (reg->mAddr | dev->mAiMask), &data, reg->mSize);
+  else 
+    ret = dev->fWrite(dev, reg->mAddr, &data, reg->mSize);
   MRT_DELAY_MS(dev->mWriteDelayMS);
   return ret;
 }
 
 
-int regdev_read_reg(mrt_regdev_t* dev,mrt_reg_t* reg, uint8_t* data)
+uint32_t regdev_read_reg(mrt_regdev_t* dev,mrt_reg_t* reg)
 {
-  return dev->fRead(dev, reg->mAddr, data, reg->mSize);
+  uint32_t data = 0;
+  if(dev->mAutoIncrement)
+    dev->fRead(dev, (reg->mAddr | dev->mAiMask), &data, reg->mSize);
+  else 
+    dev->fRead(dev, reg->mAddr, &data, reg->mSize);
+  
+#ifndef MRT_REGDEV_DISABLE_CACHE
+  reg->mCache = data;
+#endif
+  return data;
+}
+
+mrt_status_t regdev_write_field(mrt_regdev_t* dev, mrt_reg_t* reg, uint32_t mask, uint32_t data )
+{
+  mrt_status_t status;
+  int offset = getMaskOffset(mask);         //get offset of field
+  uint32_t val = regdev_read_reg(dev,reg);  //get current value
+  
+  val &= (~mask);                           //clear the bits for the field
+  val |= ((data << offset) & mask);         //set bits from data 
+
+  status = regdev_write_reg(dev,reg,data);
+
+  return status;
+}
+
+
+uint32_t regdev_read_field(mrt_regdev_t* dev,mrt_reg_t* reg, uint32_t mask)
+{
+  int offset = getMaskOffset(mask);        //get offset of field
+  uint32_t val = regdev_read_reg(dev,reg); //get current value
+  
+  val = (val & mask) >> offset;            //mask off field and remove offset
+
+  return val;
+}
+
+mrt_status_t regdev_set_flags(mrt_regdev_t* dev, mrt_reg_t* reg, uint32_t mask)
+{
+  mrt_status_t status;
+
+  uint32_t val = regdev_read_reg(dev, reg); //read current value 
+  val |= mask;                              //set flags 
+
+  status = regdev_write_reg(dev,reg, val); // write new value
+  return status;
+}
+
+
+mrt_status_t regdev_clear_flags(mrt_regdev_t* dev, mrt_reg_t* reg, uint32_t mask)
+{
+    mrt_status_t status;
+
+    uint32_t val = regdev_read_reg(dev, reg); //read current value 
+    val &= (~mask);                              //clear flags 
+
+    status = regdev_write_reg(dev,reg, val); // write new value
+    return status;
+}
+
+
+bool regdev_check_flags(mrt_regdev_t* dev,mrt_reg_t* reg, uint32_t mask)
+{
+  uint32_t val = regdev_read_reg(dev, reg); //read current value 
+  val &= mask;                              //set flags 
+
+  if(val == mask)
+  {
+    return true;
+  }
+
+  return false;
 }
 
 /*      I2C             */

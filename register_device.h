@@ -19,9 +19,12 @@ extern "C"
 
 typedef struct{
   uint32_t mAddr;
-  int mSize;
-  uint8_t mFlags;
+  uint8_t mSize;
+  uint8_t mPerm;
   bool mTouch;
+#ifndef MRT_REGDEV_DISABLE_CACHE
+  uint32_t mCache;
+#endif
 } mrt_reg_t;
 
 #define REG_DEF(name,addr,type, flags,description) \
@@ -31,6 +34,13 @@ typedef struct{
     .mFlags = flags      \
   };                            \
   mrt_reg_t* name = &name##_data;
+
+#define REG_INIT(reg,addr,type, perm) \
+(reg) = (mrt_reg_t){          \
+  .mAddr = addr,              \
+  .mSize = sizeof(type),      \
+  .mPerm = perm              \
+}                            
 
 
 typedef struct mrt_regdev_t mrt_regdev_t;
@@ -45,6 +55,8 @@ struct mrt_regdev_t{
   uint8_t mMemAddrSize;           //size of register address
   int mWriteDelayMS;              //delay after write command
   int mTimeout;
+  bool mAutoIncrement;
+  uint32_t mAiMask;
   mrt_endianess_e mEndianess;
   RegOperation fWrite; //pointer to write function
   RegOperation fRead;  //pointer to read function
@@ -78,19 +90,65 @@ mrt_status_t init_spi_register_device(mrt_regdev_t* dev, mrt_spi_handle_t handle
   *@brief writes register of device
   *@param dev ptr to generic register device
   *@param reg ptr to register definition
-  *@param data ptr to data to be written
+  *@param data data to be written
   *@return status (type defined by platform)
   */
-mrt_status_t regdev_write_reg(mrt_regdev_t* dev, mrt_reg_t* reg, uint8_t* data);
+mrt_status_t regdev_write_reg(mrt_regdev_t* dev, mrt_reg_t* reg, uint32_t data);
 
 /**
   *@brief reads register of device
   *@param dev ptr to generic register device
   *@param reg ptr to register definition
-  *@param data ptr to store data
-  *@return bytes read
+  *@return register data
   */
-int regdev_read_reg(mrt_regdev_t* dev,mrt_reg_t* reg, uint8_t* data);
+uint32_t regdev_read_reg(mrt_regdev_t* dev,mrt_reg_t* reg);
+
+/**
+  *@brief writes register of device
+  *@param dev ptr to generic register device
+  *@param reg ptr to register definition
+  *@param mask mask of field to write
+  *@param data data to be written
+  *@return status (type defined by platform)
+  */
+mrt_status_t regdev_write_field(mrt_regdev_t* dev, mrt_reg_t* reg, uint32_t mask, uint32_t data);
+
+/**
+  *@brief reads register of device
+  *@param dev ptr to generic register device
+  *@param reg ptr to register definition
+  *@param mask mask of field to read
+  *@return register data
+  */
+uint32_t regdev_read_field(mrt_regdev_t* dev,mrt_reg_t* reg, uint32_t mask);
+
+/**
+  *@brief Sets flags of register
+  *@param dev ptr to generic register device
+  *@param reg ptr to register definition
+  *@param mask mask of flags to be set
+  *@return status (type defined by platform)
+  */
+mrt_status_t regdev_set_flags(mrt_regdev_t* dev, mrt_reg_t* reg, uint32_t mask);
+
+/**
+  *@brief writes register of device
+  *@param dev ptr to generic register device
+  *@param reg ptr to register definition
+  *@param mask mask of flags to be cleared
+  *@return status (type defined by platform)
+  */
+mrt_status_t regdev_clear_flags(mrt_regdev_t* dev, mrt_reg_t* reg, uint32_t mask);
+
+/**
+  *@brief checks flags of device
+  *@param dev ptr to generic register device
+  *@param reg ptr to register definition
+  *@return true if all flags in mask are set 
+  *@return false if any flags in mask are not set
+  */
+bool regdev_check_flags(mrt_regdev_t* dev, mrt_reg_t* reg, uint32_t mask);
+
 
 
 /***************  DEFAULTS        *****************
