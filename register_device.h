@@ -55,11 +55,11 @@ struct mrt_regdev_t{
   uint8_t mMemAddrSize;           //size of register address
   int mWriteDelayMS;              //delay after write command
   int mTimeout;
-  bool mAutoIncrement;
+  bool mAutoIncrement;            
   uint32_t mAiMask;
-  mrt_endianess_e mEndianess;
-  RegOperation fWrite; //pointer to write function
-  RegOperation fRead;  //pointer to read function
+  mrt_endianess_e mEndianess;     //indicates endianess of device to automate byte-swapping
+  RegOperation fWrite;            //pointer to write function
+  RegOperation fRead;             //pointer to read function
 };
 
 
