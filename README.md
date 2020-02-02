@@ -18,6 +18,23 @@ To generate a blank template:
 mrt-device -t /path/to/file.yml
 ```
 
+The descriptor file contains device information such as part numbers, links to datashees, and other relevant information. It also contains definitions of registers and data structures on the device. The entities in the definition are:
+
+* **registers** : These are individualy addressable memory registers on the device. each register can have the folowing attributes:
+    * **addr**: register address on device
+    * **type**: register type, (default is uin8_t)
+    * **perm**: premissions on register R for read, W for write
+    * **desc**: description of register. used for code documentation 
+    * **default**: default value of the register
+
+* **fields** : these are data fields contained in registers. They are grouped by register and they contain the following attributes:
+    * **mask** : this specifies the mask for the field. This is used to mask and shift data to match the field. 
+    * **vals** : this is a list of possible values and their descriptions for the field. 
+
+> If a field is defined with a single bit mask, and no values, it is interpretted as a 'flag'. Flag fields have macros generated for setting, clearing, and checking them.
+
+
+
 Then fill out the template. example from [hts221 driver](https://github.com/uprev-mrt/device-hts221):
 ```yml
 ---
@@ -33,7 +50,6 @@ digikey_pn: 497-15382-1-ND
 prefix: HTS
 bus: I2C
 i2c_addr: 0xBE
-ai_mask: 0x80
 
 registers:
   - WHO_AM_I:     { addr: 0x0F , type: uint8_t, perm: R, desc:  Id Register, default: 0xBC}                
@@ -55,21 +71,19 @@ registers:
   - T0_OUT:       { addr: 0x3C , type: int16_t, perm: R, desc: Calibration data}
   - T1_OUT:       { addr: 0x3E , type: int16_t, perm: R, desc: Calibration data}
 
-values:
-    - STATUS:
-        flags:
-          - TEMP_READY: { mask: 0x01, desc: indicates that a temperature reading is ready }
-          - HUM_READY: { mask: 0x02, desc: indicates that a humidity reading is ready }
+fields:
+    - STATUS: 
+        - TEMP_READY: { mask: 0x01, desc: indicates that a temperature reading is ready }
+        - HUM_READY: { mask: 0x02, desc: indicates that a humidity reading is ready }
 
     - CTRL1:
-        fields:
-          - ODR:
-              mask: 0x07
-              vals:
-                - ONESHOT: { val: 0, desc: readings must be requested}
-                - 1HZ: { val: 1, desc: 1 hz sampling}
-                - 7HZ: { val: 2, desc: 7 hz sampling}
-                - 12_5HZ: { val: 3, desc: 12.5 hz sampling}
+        - ODR:
+            mask: 0x07
+            vals:
+            - ONESHOT: { val: 0, desc: readings must be requested}
+            - 1HZ: { val: 1, desc: 1 hz sampling}
+            - 7HZ: { val: 2, desc: 7 hz sampling}
+            - 12_5HZ: { val: 3, desc: 12.5 hz sampling}
 
 
 ```
