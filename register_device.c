@@ -64,6 +64,9 @@ mrt_status_t regdev_write_reg(mrt_regdev_t* dev, mrt_reg_t* reg, uint32_t data)
 #ifndef MRT_REGDEV_DISABLE_CACHE
   reg->mCache = data;
 #endif
+  reg->mFlags.mLastAccess = REG_ACCESS_W;
+  reg->mFlags.mHistory |= REG_ACCESS_W;
+
   if(dev->mAutoIncrement)
     ret = dev->fWrite(dev, (reg->mAddr | dev->mAiMask), &data, reg->mSize);
   else 
@@ -80,6 +83,9 @@ uint32_t regdev_read_reg(mrt_regdev_t* dev,mrt_reg_t* reg)
     dev->fRead(dev, (reg->mAddr | dev->mAiMask), &data, reg->mSize);
   else 
     dev->fRead(dev, reg->mAddr, &data, reg->mSize);
+  
+  reg->mFlags.mLastAccess = REG_ACCESS_R;
+  reg->mFlags.mHistory |= REG_ACCESS_R;
   
 #ifndef MRT_REGDEV_DISABLE_CACHE
   reg->mCache = data;

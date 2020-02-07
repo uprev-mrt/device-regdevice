@@ -17,11 +17,19 @@ extern "C"
 #define REG_PERM_RW   0x03
 #define REG_FLAG_SWAP 0x80 //Flag to swap endianess
 
+#define REG_ACCESS_NONE 0x00
+#define REG_ACCESS_R    0x01
+#define REG_ACCESS_W    0x02
+
+
 typedef struct{
   uint32_t mAddr;
   uint8_t mSize;
-  uint8_t mPerm;
-  bool mTouch;
+  struct {
+    uint8_t mPerm: 2;   //Permissions for register
+    uint8_t mLastAccess: 2;   //Last access type
+    uint8_t mHistory: 2;   //Flags to indicate if register was ever read/written
+  }mFlags;
 #ifndef MRT_REGDEV_DISABLE_CACHE
   uint32_t mCache;
 #endif
@@ -39,7 +47,7 @@ typedef struct{
 (reg) = (mrt_reg_t){          \
   .mAddr = addr,              \
   .mSize = sizeof(type),      \
-  .mPerm = perm              \
+  .mFlags.mPerm = perm        \
 }                            
 
 
