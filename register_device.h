@@ -12,6 +12,13 @@ extern "C"
 {
 #endif
 
+#ifdef MRT_REGDEV_DEBUG_ENABLE
+#define MRT_REGDEV_DEBUG(f_, ...)  \
+MRT_PRINTF("[RegDev]     ");       \
+MRT_PRINTF((f_), __VA_ARGS__);     \
+MRT_PRINTF("\n")
+#endif
+
 #define REG_PERM_R    0x01
 #define REG_PERM_W    0x02
 #define REG_PERM_RW   0x03
