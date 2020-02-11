@@ -73,6 +73,8 @@ mrt_status_t regdev_write_reg(mrt_regdev_t* dev, mrt_reg_t* reg, uint32_t data)
   reg->mCache = data;
 #endif
 
+
+  MRT_REGDEV_DEBUG("Writing 0x%04X to register 0x%04X", data, reg->mAddr);
   reg->mFlags.mLastAccess = REG_ACCESS_W;
   reg->mFlags.mHistory |= REG_ACCESS_W;
 
@@ -89,15 +91,17 @@ uint32_t regdev_read_reg(mrt_regdev_t* dev,mrt_reg_t* reg)
 {
   uint32_t data = 0;
 
-  /* If register does not have read permission, return 0*/
+  /* If register does not have read permission, return cache since it will have the latest written value */
   if(!(reg->mFlags.mPerm & REG_ACCESS_R))
-    return data;
+    return reg->mCache;
 
   if(dev->mAutoIncrement)
     dev->fRead(dev, (reg->mAddr | dev->mAiMask), &data, reg->mSize);
   else 
     dev->fRead(dev, reg->mAddr, &data, reg->mSize);
   
+  
+  MRT_REGDEV_DEBUG("Read 0x%04X from register 0x%04X", data, reg->mAddr);
   reg->mFlags.mLastAccess = REG_ACCESS_R;
   reg->mFlags.mHistory |= REG_ACCESS_R;
   
@@ -116,7 +120,7 @@ mrt_status_t regdev_write_field(mrt_regdev_t* dev, mrt_reg_t* reg, uint32_t mask
   val &= (~mask);                           //clear the bits for the field
   val |= ((data << offset) & mask);         //set bits from data 
 
-  status = regdev_write_reg(dev,reg,data);
+  status = regdev_write_reg(dev,reg,val);
 
   return status;
 }

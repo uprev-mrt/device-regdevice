@@ -12,11 +12,14 @@ extern "C"
 {
 #endif
 
+/* REGDEV Debug macro*/
 #ifdef MRT_REGDEV_DEBUG_ENABLE
-#define MRT_REGDEV_DEBUG(f_, ...)  \
-MRT_PRINTF("[RegDev]     ");       \
-MRT_PRINTF((f_), __VA_ARGS__);     \
-MRT_PRINTF("\n")
+  #define MRT_REGDEV_DEBUG(f_, ...)  \
+  MRT_PRINTF("[RegDev] ");       \
+  MRT_PRINTF((f_), ##__VA_ARGS__ );     \
+  MRT_PRINTF("\n")
+#else 
+  #define MRT_REGDEV_DEBUG(f_, ...)
 #endif
 
 #define REG_PERM_R    0x01
