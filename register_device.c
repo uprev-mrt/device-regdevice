@@ -37,6 +37,7 @@ mrt_status_t init_i2c_register_device(mrt_regdev_t* dev, mrt_i2c_handle_t handle
   dev->fRead = regdev_read_i2c;     //set read register function to default for i2c
   dev->mAutoIncrement = false;
   dev->mAiMask =0;
+  dev->mTimeout = 5;
 
   return MRT_STATUS_OK;
 }
@@ -53,6 +54,7 @@ mrt_status_t init_spi_register_device(mrt_regdev_t* dev, mrt_spi_handle_t handle
   dev->fRead = regdev_read_spi;     //set read register function to default for spi
   dev->mAutoIncrement = false;
   dev->mAiMask =0;
+  dev->mTimeout = 5;
 
   return MRT_STATUS_OK;
 }
@@ -61,6 +63,12 @@ mrt_status_t init_spi_register_device(mrt_regdev_t* dev, mrt_spi_handle_t handle
 mrt_status_t regdev_write_reg(mrt_regdev_t* dev, mrt_reg_t* reg, uint32_t data)
 {
   mrt_status_t ret;
+
+    /* If register does not have write permission, return 0*/
+  if(!(reg->mFlags.mPerm & REG_ACCESS_W))
+    return MRT_STATUS_ERROR;
+
+
 #ifndef MRT_REGDEV_DISABLE_CACHE
   reg->mCache = data;
 #endif
@@ -79,6 +87,11 @@ mrt_status_t regdev_write_reg(mrt_regdev_t* dev, mrt_reg_t* reg, uint32_t data)
 uint32_t regdev_read_reg(mrt_regdev_t* dev,mrt_reg_t* reg)
 {
   uint32_t data = 0;
+
+  /* If register does not have read permission, return 0*/
+  if(!(reg->mFlags.mPerm & REG_ACCESS_R))
+    return data;
+
   if(dev->mAutoIncrement)
     dev->fRead(dev, (reg->mAddr | dev->mAiMask), &data, reg->mSize);
   else 
@@ -158,12 +171,12 @@ bool regdev_check_flags(mrt_regdev_t* dev,mrt_reg_t* reg, uint32_t mask)
 /*      I2C             */
 mrt_status_t regdev_write_i2c(mrt_regdev_t* dev, uint32_t addr, uint8_t* data,int len)
 {
-  return MRT_I2C_MEM_WRITE(dev->mI2cHandle, dev->mAddr, addr, dev->mMemAddrSize , data, len, 5 );
+  return MRT_I2C_MEM_WRITE(dev->mI2cHandle, dev->mAddr, addr, dev->mMemAddrSize , data, len, dev->mTimeout );
 }
 
 mrt_status_t regdev_read_i2c(mrt_regdev_t* dev, uint32_t addr, uint8_t* data,int len)
 {
-  return MRT_I2C_MEM_READ(dev->mI2cHandle, dev->mAddr, addr, dev->mMemAddrSize , data, len, 5 );
+  return MRT_I2C_MEM_READ(dev->mI2cHandle, dev->mAddr, addr, dev->mMemAddrSize , data, len, dev->mTimeout );
 }
 
 /*      SPI               */
