@@ -53,11 +53,12 @@ typedef struct{
   };                            \
   mrt_reg_t* name = &name##_data;
 
-#define REG_INIT(reg,addr,type, perm) \
+#define REG_INIT(reg,addr,type, perm, default) \
 (reg) = (mrt_reg_t){          \
   .mAddr = addr,              \
   .mSize = sizeof(type),      \
-  .mFlags.mPerm = perm        \
+  .mFlags.mPerm = perm,        \
+  .mCache = default            \
 }                            
 
 
