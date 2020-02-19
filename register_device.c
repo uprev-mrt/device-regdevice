@@ -79,9 +79,9 @@ mrt_status_t regdev_write_reg(mrt_regdev_t* dev, mrt_reg_t* reg, uint32_t data)
   reg->mFlags.mHistory |= REG_ACCESS_W;
 
   if(dev->mAutoIncrement)
-    ret = dev->fWrite(dev, (reg->mAddr | dev->mAiMask), &data, reg->mSize);
+    ret = dev->fWrite(dev, (reg->mAddr | dev->mAiMask), (uint8_t*)&data, reg->mSize);
   else 
-    ret = dev->fWrite(dev, reg->mAddr, &data, reg->mSize);
+    ret = dev->fWrite(dev, reg->mAddr, (uint8_t*)&data, reg->mSize);
   MRT_DELAY_MS(dev->mWriteDelayMS);
   return ret;
 }
@@ -96,9 +96,9 @@ uint32_t regdev_read_reg(mrt_regdev_t* dev,mrt_reg_t* reg)
     return reg->mCache;
 
   if(dev->mAutoIncrement)
-    dev->fRead(dev, (reg->mAddr | dev->mAiMask), &data, reg->mSize);
+    dev->fRead(dev, (reg->mAddr | dev->mAiMask), (uint8_t*)&data, reg->mSize);
   else 
-    dev->fRead(dev, reg->mAddr, &data, reg->mSize);
+    dev->fRead(dev, reg->mAddr, (uint8_t*)&data, reg->mSize);
   
   
   MRT_REGDEV_DEBUG("Read 0x%04X from register 0x%04X", data, reg->mAddr);
