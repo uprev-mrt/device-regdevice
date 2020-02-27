@@ -188,13 +188,12 @@ mrt_status_t regdev_read_i2c(mrt_regdev_t* dev, uint32_t addr, uint8_t* data,int
 mrt_status_t regdev_write_spi(mrt_regdev_t* dev, uint32_t addr, uint8_t* data, int len)
 {
   mrt_status_t status;
-  uint8_t trash[len];
 
   //send address
-  status = MRT_SPI_TRANSFER(dev->mSpiHandle, addr, trash, dev->mMemAddrSize, dev->mTimeout );
+  status = MRT_SPI_TRANSMIT(dev->mSpiHandle, addr, dev->mMemAddrSize, dev->mTimeout );
 
   //send data
-  status = MRT_SPI_TRANSFER(dev->mSpiHandle, data, trash, len, dev->mTimeout);
+  status = MRT_SPI_TRANSMIT(dev->mSpiHandle, data, len, dev->mTimeout);
 
   return status;
 }
@@ -203,13 +202,12 @@ mrt_status_t regdev_write_spi(mrt_regdev_t* dev, uint32_t addr, uint8_t* data, i
 mrt_status_t regdev_read_spi(mrt_regdev_t* dev, uint32_t addr, uint8_t* data, int len)
 {
   mrt_status_t status;
-  uint8_t trash[len];
 
   //send address
-  status = MRT_SPI_TRANSFER(dev->mSpiHandle, addr, trash, dev->mMemAddrSize, dev->mTimeout );
+  status = MRT_SPI_TRANSMIT(dev->mSpiHandle, &addr, dev->mMemAddrSize, dev->mTimeout );
 
   //read data
-  status = MRT_SPI_TRANSFER(dev->mSpiHandle, trash, data, len, dev->mTimeout);
+  status = MRT_SPI_RECIEVE(dev->mSpiHandle, data, len, dev->mTimeout);
 
   return status;
 }
