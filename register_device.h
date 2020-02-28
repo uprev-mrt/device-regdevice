@@ -45,13 +45,13 @@ typedef struct{
 #endif
 } mrt_reg_t;
 
-#define REG_DEF(name,addr,type, flags,description) \
-  mrt_reg_t name##_data = {     \
-    .mAddr = addr,              \
-    .mSize = sizeof(type),      \
-    .mFlags = flags      \
-  };                            \
-  mrt_reg_t* name = &name##_data;
+#define REG_DEF(name,addr,type, perm, default) \
+  mrt_reg_t name = {           \
+    .mAddr = addr,             \
+    .mSize = sizeof(type),     \
+    .mFlags = perm,      \
+    .mCache = default           \
+  };                            
 
 #define REG_INIT(reg,addr,type, perm, default) \
 (reg) = (mrt_reg_t){          \
@@ -59,8 +59,14 @@ typedef struct{
   .mSize = sizeof(type),      \
   .mFlags.mPerm = perm,        \
   .mCache = default            \
-}                            
+}          
 
+/* Used in unit testing because C++ does not support compound literals.. */
+#define REG_INIT_EXP(reg,addr,type, perm, default) \
+  (reg).mAddr = addr; \
+  (reg).mSize = sizeof(type); \
+  (reg).mFlags.mPerm = perm; \
+  (reg).mCache = default;
 
 typedef struct mrt_regdev_t mrt_regdev_t;
 typedef mrt_status_t (*RegOperation)(mrt_regdev_t* dev, uint32_t addr, uint8_t* data,int len); 
