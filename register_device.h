@@ -5,7 +5,8 @@
   *@date 02/16/2019
   */
 
- #include "Platforms/Common/mrt_platform.h"
+#pragma once
+#include "Platforms/Common/mrt_platform.h"
 
 #ifdef __cplusplus
 extern "C"
