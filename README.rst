@@ -60,8 +60,8 @@ Then fill out the template. example from `hts221 driver <https://github.com/upre
     category: Device
     requires: [RegDevice,Platform]
     datasheet: https://www.st.com/content/ccc/resource/technical/document/datasheet/4d/9a/9c/ad/25/07/42/34/DM00116291.pdf/files/DM00116291.pdf/jcr:content/translations/en.DM00116291.pdf
-    mfg: STMicroelectronics
-    mfg_pn: HTS221TR
+    mfr: STMicroelectronics
+    mfr_pn: HTS221TR
     digikey_pn: 497-15382-1-ND
 
     prefix: HTS
